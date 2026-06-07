@@ -1,4 +1,6 @@
-# Custom RxJava - Реализация реактивной библиотеки
+# CustomRxJava - Реализация реактивной библиотеки
+
+В ходе разработки использовался Gradle
 
 ## Архитектура системы
 
@@ -35,13 +37,13 @@
 ### Пример использования Schedulers
 
 ```java
-Observable.create(observer -> {
-    // Тяжелые вычисления в Computation
-    observer.onNext(compute());
-})
-.subscribeOn(new ComputationScheduler())
-.observeOn(new IoScheduler())
-.subscribe(result -> saveToDatabase(result));
+Observable.create((observer, disposable) -> {
+        // Тяжелые вычисления в Computation
+        observer.onNext(compute());
+        })
+        .subscribeOn(new ComputationScheduler())
+        .observeOn(new IoScheduler())
+        .subscribe(result -> saveToDatabase(result));
 ```
 
 ## Операторы
@@ -50,7 +52,7 @@ Observable.create(observer -> {
 
 ```java
 observable.map(x -> x * 2)
-          .subscribe(System.out::println);
+        .subscribe(System.out::println);
 ```
 
 ### Filter
@@ -58,22 +60,22 @@ observable.map(x -> x * 2)
 
 ```java
 observable.filter(x -> x > 10)
-          .subscribe(System.out::println);
+        .subscribe(System.out::println);
 ```
 ### FlatMap
 Разворачивает элементы в новые потоки
 
 ```java
 observable.flatMap(id -> fetchUserData(id))
-          .subscribe(user -> System.out.println(user));
+        .subscribe(user -> System.out.println(user));
 ```
 ### Обработка ошибок
 Ошибки передаются в метод onError() Observer:
 
 ```java
 observable.subscribe(
-    item -> System.out.println(item),
-    error -> System.err.println("Error: " + error),
+        item -> System.out.println(item),
+error -> System.err.println("Error: " + error),
     () -> System.out.println("Completed")
 );
 ```
@@ -83,6 +85,38 @@ Disposable disposable = observable.subscribe(item -> process(item));
 
 // Отмена подписки
 if (someCondition) {
-    disposable.dispose();
+        disposable.dispose();
 }
 ```
+## Таким образом:
+
+Реализована библиотека CustomRxJava со следующим функционалом:
+
+### 1.Базовые компоненты
+
+- Observable<T> - источник событий
+- Observer<T> - получатель событий с методами onNext, onError, onComplete
+- Disposable - управление подпиской
+
+### 2.Операторы преобразования
+
+- map() - преобразование элементов
+- filter() - фильтрация элементов
+- flatMap() - разворачивание вложенных потоков
+
+### 3.Управление потоками (Schedulers)
+
+- IoScheduler - для I/O операций (CachedThreadPool)
+- ComputationScheduler - для вычислительных задач (FixedThreadPool)
+- SingleThreadScheduler - для последовательных задач (SingleThreadExecutor)
+- subscribeOn() - задает поток для генерации событий
+- observeOn() - задает поток для обработки событий
+
+### 4.Обработка ошибок
+
+- Корректная передача ошибок в onError()
+- Остановка потока после ошибки
+
+### 5.Тестирование
+
+- 17 тестов, покрывающих все сценарии
