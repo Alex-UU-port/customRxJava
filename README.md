@@ -42,40 +42,47 @@ Observable.create(observer -> {
 .subscribeOn(new ComputationScheduler())
 .observeOn(new IoScheduler())
 .subscribe(result -> saveToDatabase(result));
+```
 
-Операторы
-Map
+## Операторы
+### Map
 Преобразует каждый элемент потока
 
-java
+```java
 observable.map(x -> x * 2)
           .subscribe(System.out::println);
-Filter
+```
+
+### Filter
 Фильтрует элементы по условию
 
-java
+```java
 observable.filter(x -> x > 10)
           .subscribe(System.out::println);
-FlatMap
+```
+### FlatMap
 Разворачивает элементы в новые потоки
 
-java
+```java
 observable.flatMap(id -> fetchUserData(id))
           .subscribe(user -> System.out.println(user));
-Обработка ошибок
+```
+### Обработка ошибок
 Ошибки передаются в метод onError() Observer:
 
-java
+```java
 observable.subscribe(
     item -> System.out.println(item),
     error -> System.err.println("Error: " + error),
     () -> System.out.println("Completed")
 );
-Управление подпиской
-java
+```
+### Управление подпиской
+```java
 Disposable disposable = observable.subscribe(item -> process(item));
 
 // Отмена подписки
 if (someCondition) {
     disposable.dispose();
 }
+```
