@@ -1,8 +1,9 @@
 plugins {
     id 'java'
+    id 'application'
 }
 
-group = 'com.my.rxjava'
+group = 'com.alex.exam'
 version = '1.0.0'
 
 java {
@@ -15,11 +16,86 @@ repositories {
 }
 
 dependencies {
-    testImplementation platform('org.junit:junit-bom:5.10.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
+    // JUnit 5 для тестирования
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.0'
+
+    // AssertJ для красивых утверждений
     testImplementation 'org.assertj:assertj-core:3.24.2'
 }
 
 test {
     useJUnitPlatform()
+
+    systemProperty "file.encoding", "UTF-8"
+
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+        showStandardStreams = true
+
+        afterSuite { desc, result ->
+            if (!desc.parent) {
+                println "\n=== РЕЗУЛЬТАТЫ ТЕСТОВ ==="
+                println "Выполнено: ${result.testCount} тестов"
+                println "Успешно: ${result.successfulTestCount}"
+                println "Провалено: ${result.failedTestCount}"
+                println "Пропущено: ${result.skippedTestCount}"
+
+                if (result.successfulTestCount == result.testCount) {
+                    println "\n✅ ВСЕ ТЕСТЫ ПРОЙДЕНЫ УСПЕШНО!"
+                } else {
+                    println "\n❌ ЕСТЬ ПРОВАЛЕННЫЕ ТЕСТЫ!"
+                }
+            }
+        }
+    }
+}
+
+application {
+    mainClass = 'alex.exam.Main'
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(JavaExec) {
+    systemProperty "file.encoding", "UTF-8"
+}
+
+tasks.withType(Test) {
+    systemProperty "file.encoding", "UTF-8"
+    systemProperty "user.language", "ru"
+    systemProperty "user.country", "RU"
+}
+
+// Задача для запуска демонстрации
+task runDemo(type: JavaExec, dependsOn: classes) {
+    mainClass = 'alex.exam.Main'
+    classpath = sourceSets.main.runtimeClasspath
+    standardInput = System.in
+}
+
+// Информация о проекте
+tasks.register('projectInfo') {
+    doLast {
+        println "========================================"
+        println "Custom RxJava Library"
+        println "========================================"
+        println "Проект: ${rootProject.name}"
+        println "Версия: ${version}"
+        println "Java: ${JavaVersion.current()}"
+        println "Главный класс: alex.exam.Main"
+        println "Пакет: alex.exam"
+        println "========================================"
+        println "Доступные задачи:"
+        println "  - test        : запуск всех тестов"
+        println "  - runDemo     : запуск демонстрационного приложения"
+        println "  - clean       : очистка собранных файлов"
+        println "  - build       : полная сборка проекта"
+        println "  - projectInfo : информация о проекте"
+        println "========================================"
+    }
 }

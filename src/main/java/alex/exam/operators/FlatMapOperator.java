@@ -7,41 +7,61 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 public class FlatMapOperator<T, R> extends Observable<R> {
+
     public FlatMapOperator(Observable<T> source, Function<T, Observable<R>> mapper) {
-        super(observer -> {
+        super((observer, disposable) -> {
             AtomicInteger pending = new AtomicInteger(1);
 
             source.subscribe(new Observer<T>() {
                 @Override
                 public void onNext(T item) {
+                    if (disposable.isDisposed()) {
+                        return;
+                    }
+
                     try {
                         Observable<R> inner = mapper.apply(item);
                         pending.incrementAndGet();
+
                         inner.subscribe(new Observer<R>() {
                             @Override
-                            public void onNext(R r) { observer.onNext(r); }
+                            public void onNext(R r) {
+                                if (!disposable.isDisposed()) {
+                                    observer.onNext(r);
+                                }
+                            }
+
                             @Override
-                            public void onError(Throwable t) { observer.onError(t); }
+                            public void onError(Throwable t) {
+                                if (!disposable.isDisposed()) {
+                                    observer.onError(t);
+                                }
+                            }
+
                             @Override
                             public void onComplete() {
-                                if (pending.decrementAndGet() == 0) {
+                                if (pending.decrementAndGet() == 0 && !disposable.isDisposed()) {
                                     observer.onComplete();
                                 }
                             }
                         });
                     } catch (Throwable t) {
-                        observer.onError(t);
+                        if (!disposable.isDisposed()) {
+                            observer.onError(t);
+                        }
                     }
                 }
 
                 @Override
                 public void onError(Throwable t) {
-                    observer.onError(t);
+                    if (!disposable.isDisposed()) {
+                        observer.onError(t);
+                    }
                 }
 
                 @Override
                 public void onComplete() {
-                    if (pending.decrementAndGet() == 0) {
+                    if (pending.decrementAndGet() == 0 && !disposable.isDisposed()) {
                         observer.onComplete();
                     }
                 }
